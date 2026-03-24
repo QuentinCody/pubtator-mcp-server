@@ -42,6 +42,8 @@ interface ProcessRequestBody {
 
 interface SqlQueryBody {
 	sql: string;
+	/** When true, also runs a COUNT(*) wrapper to report total matching rows */
+	count_total?: boolean;
 }
 
 interface RegisterRequestBody {
@@ -136,6 +138,12 @@ function deduplicateCompositeIndexes(indexes: string[][]): string[][] {
 		}
 	}
 	return result;
+}
+
+/** Strip LIMIT/OFFSET clause from a SQL query for COUNT(*) wrapping. */
+function stripLimit(sql: string): string {
+	// Remove trailing LIMIT n [OFFSET m] — case-insensitive
+	return sql.replace(/\s+LIMIT\s+\d+(\s+OFFSET\s+\d+)?\s*$/i, "");
 }
 
 /** Safely parse JSON, returning undefined on failure. */
@@ -481,10 +489,30 @@ export class RestStagingDO extends DurableObject {
 		const body: SqlQueryBody = (raw !== null && typeof raw === "object" ? raw : { sql: "" }) as SqlQueryBody;
 		const res = this.ctx.storage.sql.exec(body.sql);
 		const results = res.toArray();
+
+		// If count_total requested, run a COUNT(*) wrapper to determine total matching rows
+		let totalMatching: number | undefined;
+		let truncated: boolean | undefined;
+		if (body.count_total) {
+			try {
+				// Wrap the user's query (with LIMIT stripped) in a COUNT(*)
+				const countSql = `SELECT COUNT(*) as c FROM (${stripLimit(body.sql)})`;
+				const countResult = this.ctx.storage.sql.exec(countSql).one();
+				totalMatching = Number((countResult as { c: number })?.c ?? results.length);
+				truncated = totalMatching > results.length;
+			} catch {
+				// If COUNT wrapper fails (e.g. complex CTEs), just report based on results
+				truncated = undefined;
+				totalMatching = undefined;
+			}
+		}
+
 		return this.jsonResponse({
 			success: true,
 			results,
 			row_count: results.length,
+			...(truncated !== undefined ? { truncated } : {}),
+			...(totalMatching !== undefined ? { total_matching: totalMatching } : {}),
 		});
 	}
 
@@ -514,10 +542,28 @@ export class RestStagingDO extends DurableObject {
 			}
 			enhanced.push(out);
 		}
+
+		// Truncation support for enhanced queries
+		let totalMatching: number | undefined;
+		let truncated: boolean | undefined;
+		if (body.count_total) {
+			try {
+				const countSql = `SELECT COUNT(*) as c FROM (${stripLimit(body.sql)})`;
+				const countResult = this.ctx.storage.sql.exec(countSql).one();
+				totalMatching = Number((countResult as { c: number })?.c ?? enhanced.length);
+				truncated = totalMatching > enhanced.length;
+			} catch {
+				truncated = undefined;
+				totalMatching = undefined;
+			}
+		}
+
 		return this.jsonResponse({
 			success: true,
 			results: enhanced,
 			row_count: enhanced.length,
+			...(truncated !== undefined ? { truncated } : {}),
+			...(totalMatching !== undefined ? { total_matching: totalMatching } : {}),
 		});
 	}
 
@@ -590,13 +636,11 @@ export class RestStagingDO extends DurableObject {
 			// Non-critical
 		}
 
-		// Build profile lookup: tableName.colName → ColumnProfile
-		const profileLookup = new Map<string, Record<string, unknown>>();
+		// Build profile lookup: tableName → { colName → ColumnProfile }
+		const profileByTable = new Map<string, Record<string, unknown>>();
 		if (columnProfiles) {
 			for (const tp of columnProfiles) {
-				for (const cp of tp.columns) {
-					profileLookup.set(`${tp.table}.${cp.name}`, cp as unknown as Record<string, unknown>);
-				}
+				profileByTable.set(tp.table, tp.columns as unknown as Record<string, unknown>);
 			}
 		}
 
@@ -622,7 +666,8 @@ export class RestStagingDO extends DurableObject {
 				columns: columnResults.map((col: Record<string, unknown>) => {
 					const colName = col.name as string;
 					const meta = columnMeta.get(`${tableName}.${colName}`);
-					const colProfile = profileLookup.get(`${tableName}.${colName}`);
+					const tableProfiles = profileByTable.get(tableName) as Record<string, Record<string, unknown>> | undefined;
+					const colProfile = tableProfiles?.[colName];
 					return {
 						name: colName,
 						type: col.type as string,

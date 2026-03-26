@@ -6,7 +6,7 @@ interface SchemaEnv {
 	PUBTATOR_DATA_DO?: unknown;
 }
 
-export function registerGetSchema(server: McpServer, env?: SchemaEnv) {
+export function registerGetSchema(server: McpServer, env?: SchemaEnv): void {
 	const handler = createGetSchemaHandler("PUBTATOR_DATA_DO", "pubtator");
 
 	server.registerTool(

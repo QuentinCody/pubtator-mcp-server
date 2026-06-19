@@ -23,6 +23,8 @@ export function registerCodeMode(
 
 	const executeTool = createExecuteTool({
 		prefix: "pubtator",
+		// Verifiable provenance: pubtator_execute results carry a _meta.citation.
+		source: { id: "pubtator", name: "PubTator (NCBI)", url: "https://www.ncbi.nlm.nih.gov/research/pubtator3", license: "U.S. Public Domain" },
 		catalog: pubtatorCatalog,
 		apiFetch,
 		doNamespace: env.PUBTATOR_DATA_DO,

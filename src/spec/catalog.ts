@@ -4,14 +4,15 @@ export const pubtatorCatalog: ApiCatalog = {
 	name: "PubTator3",
 	baseUrl: "https://www.ncbi.nlm.nih.gov/research/pubtator3-api",
 	version: "3",
-	endpointCount: 3,
+	endpointCount: 4,
 	auth: "No auth required. Optional NCBI API key improves rate limits from 3 to 10 req/sec.",
 	notes: [
 		"PubTator3 provides automated biomedical entity annotations (Gene, Disease, Chemical, Species, Variant) for PubMed articles.",
 		"Entity IDs are normalized: Gene → NCBI Gene ID, Disease → MeSH, Chemical → MeSH, Species → NCBI Taxonomy, Variant → rsID + HGVS.",
-		"~8 million articles are annotated (not all of PubMed's 36M+).",
+		"PubTator3 annotates 36M+ PubMed abstracts plus 6M+ PMC full-text articles.",
+		"RELATIONS: the /relations endpoint exposes ~33M pre-computed, typed, directional relationship triples across 12 relation types (treat, cause, inhibit, associate, negative_correlate, positive_correlate, drug_interact, interact, stimulate, prevent, compare, convert) — i.e. literature relation extraction, available pre-computed and free. Use it to build an entity's relationship neighborhood in one call.",
 		"BioC JSON format nests annotations inside passages with exact text spans (offsets).",
-		"The publications/export endpoint is the most reliable; the search endpoint can be intermittent.",
+		"The publications/export and relations endpoints are the most reliable; the free-text search endpoint can be intermittent.",
 		"For multiple PMIDs, comma-separate them (up to ~100 per request).",
 	].join(" "),
 	endpoints: [
@@ -165,8 +166,85 @@ for (const entity of results) {
 			usageHint:
 				"Use this for entity name normalization — map free text to standard IDs before querying Gene, MeSH, or Taxonomy databases.",
 		},
+		{
+			method: "GET",
+			path: "/relations",
+			summary: "Find pre-computed, typed relationships between biomedical entities (literature relation extraction)",
+			description:
+				"Returns typed, directional relationships PubTator3 has automatically extracted across its entire corpus (36M+ abstracts + 6M+ full-text articles, ~33M relations total). " +
+				"Each relation links two entities (gene, disease, chemical, variant) with a relation type and the number of supporting publications. " +
+				"This is the relationship layer behind PubTator3 — the same biomedical relation-extraction capability commercial knowledge-graph products build by fine-tuning LLMs, here available pre-computed and free. " +
+				"Pass e1 alone to retrieve an entity's full relationship neighborhood, or e1 + e2 (+ optional type) to test a specific pairwise hypothesis.",
+			category: "relations",
+			queryParams: [
+				{
+					name: "e1",
+					type: "string",
+					required: true,
+					description:
+						"First entity, in PubTator id format @<TYPE>_<name>. Resolve it from /entity/autocomplete (use the returned `_id`). Examples: '@GENE_EGFR', '@CHEMICAL_Gefitinib', '@DISEASE_Lung_Neoplasms', '@VARIANT_p.T790M_EGFR_human'.",
+				},
+				{
+					name: "e2",
+					type: "string",
+					required: false,
+					description: "Optional second entity (same @<TYPE>_<name> format). When provided, only relations between e1 and e2 are returned.",
+				},
+				{
+					name: "type",
+					type: "string",
+					required: false,
+					description: "Optional relation-type filter.",
+					enum: [
+						"treat",
+						"cause",
+						"interact",
+						"associate",
+						"compare",
+						"drug_interact",
+						"stimulate",
+						"inhibit",
+						"negative_correlate",
+						"positive_correlate",
+						"prevent",
+						"convert",
+					],
+				},
+			],
+			responseShape: `Array<{
+  type: "treat" | "cause" | "interact" | "associate" | "compare" | "drug_interact" | "stimulate" | "inhibit" | "negative_correlate" | "positive_correlate" | "prevent" | "convert";
+  source: string;        // entity id, e.g. "@CHEMICAL_Gefitinib"
+  target: string;        // entity id, e.g. "@GENE_EGFR"
+  publications: number;  // count of supporting articles (evidence strength)
+}>`,
+			example: `// Build EGFR's literature-mined relationship neighborhood, ranked by evidence
+const rels = await api.get("/relations", { e1: "@GENE_EGFR" });
+// Hub entities can return hundreds of relations and may auto-stage (>30KB):
+if (rels.__staged) return rels; // then explore with pubtator_query_data
+const top = rels.sort((a, b) => b.publications - a.publications).slice(0, 20);
+for (const r of top) console.log(r.source, "--" + r.type + "->", r.target, "(" + r.publications + ")");`,
+			usageHint:
+				"Resolve entity names to ids first via /entity/autocomplete (the `_id` field). Hub entities (well-studied genes/diseases) return many relations and may auto-stage — filter with e2/type or query the staged table with SQL. To pull the supporting articles for a relation, feed the entity ids into /search/ relations syntax, then annotate PMIDs via /publications/export/biocjson.",
+		},
 	],
 	workflows: [
+		{
+			title: "Build an entity's literature relationship graph",
+			description:
+				"Resolve an entity name to its PubTator id, then pull its pre-computed, typed relationship neighborhood (the literature relation-extraction layer) ranked by supporting-publication count.",
+			keywords: ["relationship", "relation extraction", "knowledge graph", "neighborhood", "triples", "associate", "treat", "inhibit"],
+			code: `// 1) Resolve the entity name to its PubTator id (the _id field, e.g. "@GENE_EGFR")
+const hits = await api.get("/entity/autocomplete/", { query: "EGFR", type: "Gene" });
+const e1 = hits[0]._id;
+
+// 2) Pull every typed relation for that entity
+const rels = await api.get("/relations", { e1 });
+if (rels.__staged) return rels; // large neighborhood → query with pubtator_query_data
+
+// 3) Rank by supporting evidence
+const top = rels.sort((a, b) => b.publications - a.publications).slice(0, 25);
+return { entity: e1, relation_count: rels.length, top_relations: top };`,
+		},
 		{
 			title: "Extract all entities from a set of PMIDs",
 			description:

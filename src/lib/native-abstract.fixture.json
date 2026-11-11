@@ -1,0 +1,596 @@
+{
+  "PubTator3": [
+    {
+      "_id": "34786492|None",
+      "id": "34786492",
+      "infons": {},
+      "passages": [
+        {
+          "infons": {
+            "journal": "Biochem Biophys Rep. 2021 Nov 3;28:101165. doi: 10.1016/j.bbrep.2021.101165. ",
+            "year": "2021",
+            "article-id_pmc": "PMC8579115",
+            "type": "title",
+            "authors": "Mei Y, Liang D, Wang T, Yu D"
+          },
+          "offset": 0,
+          "text": "Gaining insights into relevance across cancers based on mutation features of TP53 gene.",
+          "sentences": [],
+          "annotations": [
+            {
+              "id": "1",
+              "infons": {
+                "identifier": "MESH:D009369",
+                "type": "Disease",
+                "valid": true,
+                "normalized": [
+                  "D009369"
+                ],
+                "database": "ncbi_mesh",
+                "normalized_id": "D009369",
+                "biotype": "disease",
+                "name": "Neoplasms",
+                "accession": "@DISEASE_Neoplasms"
+              },
+              "text": "cancers",
+              "locations": [
+                {
+                  "offset": 39,
+                  "length": 7
+                }
+              ]
+            }
+          ],
+          "relations": []
+        },
+        {
+          "infons": {
+            "type": "abstract"
+          },
+          "offset": 88,
+          "text": "The tumor suppressor gene TP53, one of the most frequently mutated genes, is recognized as the guardian of genome and can provide a significant barrier to neoplastic transformation and tumor progression. Traditional theory believes that TP53 mutations are equal among cancer types. However, to date, no study has explored the TP53 mutation profile from a holistic and systematic standpoint to discovery its relevance and feature with cancers. Mutation signature, an unbiased approach to identify the mutational processes, can be a potent indicator for exploring mutation-driven tumor occurrence and progression. In this research, several features such as hotspots, mutability and mutation signature of somatic TP53 mutations derived from 18 types of cancer tissues from cBioPortal were analyzed and manifested the organizational preference among cancers. Mutation signatures found in almost all cancer types were Signature 6 related to mismatch repair deficiency, and Signature 1 that reflects the natural decomposition of 5-methylcytosine into thymine associated with aging. Meanwhile, several signatures of TP53 mutations displayed tissue-selective. Mutations enriched in bladder, skin, lung cancer were associated with signatures of APOBEC activity (Signature 2 and 13), alkylating agents (Signature 11), and tobacco smoke (Signature 4), respectively. Moreover, Signature 4 and 29 associated with tobacco smoking or chewing found in lung, sarcoma, esophageal, and head and neck cancer may be related to their smoking history. In addition, several digestive cancers, including colorectal, stomach, pancreatic and esophageal cancers, showed the high correlation in context and mutation signature profiles. Our study suggests that the tissue-selective activity of mutational processes would reflect the tissue-specific enrichment of TP53 mutations and provides a new perspective to understand the relevance of diverse diseases based on the spectrum of TP53 mutations.",
+          "sentences": [],
+          "annotations": [
+            {
+              "id": "21",
+              "infons": {
+                "identifier": "MESH:D009369",
+                "type": "Disease",
+                "valid": true,
+                "normalized": [
+                  "D009369"
+                ],
+                "database": "ncbi_mesh",
+                "normalized_id": "D009369",
+                "biotype": "disease",
+                "name": "Neoplasms",
+                "accession": "@DISEASE_Neoplasms"
+              },
+              "text": "tumor",
+              "locations": [
+                {
+                  "offset": 92,
+                  "length": 5
+                }
+              ]
+            },
+            {
+              "id": "22",
+              "infons": {
+                "identifier": "MESH:D009369",
+                "type": "Disease",
+                "valid": true,
+                "normalized": [
+                  "D009369"
+                ],
+                "database": "ncbi_mesh",
+                "normalized_id": "D009369",
+                "biotype": "disease",
+                "name": "Neoplasms",
+                "accession": "@DISEASE_Neoplasms"
+              },
+              "text": "tumor",
+              "locations": [
+                {
+                  "offset": 273,
+                  "length": 5
+                }
+              ]
+            },
+            {
+              "id": "23",
+              "infons": {
+                "identifier": "MESH:D009369",
+                "type": "Disease",
+                "valid": true,
+                "normalized": [
+                  "D009369"
+                ],
+                "database": "ncbi_mesh",
+                "normalized_id": "D009369",
+                "biotype": "disease",
+                "name": "Neoplasms",
+                "accession": "@DISEASE_Neoplasms"
+              },
+              "text": "cancer",
+              "locations": [
+                {
+                  "offset": 356,
+                  "length": 6
+                }
+              ]
+            },
+            {
+              "id": "24",
+              "infons": {
+                "identifier": "MESH:D009369",
+                "type": "Disease",
+                "valid": true,
+                "normalized": [
+                  "D009369"
+                ],
+                "database": "ncbi_mesh",
+                "normalized_id": "D009369",
+                "biotype": "disease",
+                "name": "Neoplasms",
+                "accession": "@DISEASE_Neoplasms"
+              },
+              "text": "cancers",
+              "locations": [
+                {
+                  "offset": 522,
+                  "length": 7
+                }
+              ]
+            },
+            {
+              "id": "25",
+              "infons": {
+                "identifier": "MESH:D009369",
+                "type": "Disease",
+                "valid": true,
+                "normalized": [
+                  "D009369"
+                ],
+                "database": "ncbi_mesh",
+                "normalized_id": "D009369",
+                "biotype": "disease",
+                "name": "Neoplasms",
+                "accession": "@DISEASE_Neoplasms"
+              },
+              "text": "tumor",
+              "locations": [
+                {
+                  "offset": 666,
+                  "length": 5
+                }
+              ]
+            },
+            {
+              "id": "26",
+              "infons": {
+                "identifier": "MESH:D009369",
+                "type": "Disease",
+                "valid": true,
+                "normalized": [
+                  "D009369"
+                ],
+                "database": "ncbi_mesh",
+                "normalized_id": "D009369",
+                "biotype": "disease",
+                "name": "Neoplasms",
+                "accession": "@DISEASE_Neoplasms"
+              },
+              "text": "cancer",
+              "locations": [
+                {
+                  "offset": 838,
+                  "length": 6
+                }
+              ]
+            },
+            {
+              "id": "27",
+              "infons": {
+                "identifier": "MESH:D009369",
+                "type": "Disease",
+                "valid": true,
+                "normalized": [
+                  "D009369"
+                ],
+                "database": "ncbi_mesh",
+                "normalized_id": "D009369",
+                "biotype": "disease",
+                "name": "Neoplasms",
+                "accession": "@DISEASE_Neoplasms"
+              },
+              "text": "cancers",
+              "locations": [
+                {
+                  "offset": 934,
+                  "length": 7
+                }
+              ]
+            },
+            {
+              "id": "28",
+              "infons": {
+                "identifier": "MESH:D009369",
+                "type": "Disease",
+                "valid": true,
+                "normalized": [
+                  "D009369"
+                ],
+                "database": "ncbi_mesh",
+                "normalized_id": "D009369",
+                "biotype": "disease",
+                "name": "Neoplasms",
+                "accession": "@DISEASE_Neoplasms"
+              },
+              "text": "cancer",
+              "locations": [
+                {
+                  "offset": 983,
+                  "length": 6
+                }
+              ]
+            },
+            {
+              "id": "29",
+              "infons": {
+                "identifier": "MESH:D049914",
+                "type": "Disease",
+                "valid": true,
+                "normalized": [
+                  "D049914"
+                ],
+                "database": "ncbi_mesh",
+                "normalized_id": "D049914",
+                "biotype": "disease",
+                "name": "DNA Repair-Deficiency Disorders",
+                "accession": "@DISEASE_DNA_Repair_Deficiency_Disorders"
+              },
+              "text": "repair",
+              "locations": [
+                {
+                  "offset": 1033,
+                  "length": 6
+                }
+              ]
+            },
+            {
+              "id": "30",
+              "infons": {
+                "identifier": "MESH:D044503",
+                "type": "Chemical",
+                "valid": true,
+                "normalized": [
+                  "D044503"
+                ],
+                "database": "ncbi_mesh",
+                "normalized_id": "D044503",
+                "biotype": "chemical",
+                "name": "5-Methylcytosine",
+                "accession": "@CHEMICAL_5_Methylcytosine"
+              },
+              "text": "5-methylcytosine",
+              "locations": [
+                {
+                  "offset": 1111,
+                  "length": 16
+                }
+              ]
+            },
+            {
+              "id": "31",
+              "infons": {
+                "identifier": "MESH:D013941",
+                "type": "Chemical",
+                "valid": true,
+                "normalized": [
+                  "D013941"
+                ],
+                "database": "ncbi_mesh",
+                "normalized_id": "D013941",
+                "biotype": "chemical",
+                "name": "Thymine",
+                "accession": "@CHEMICAL_Thymine"
+              },
+              "text": "thymine",
+              "locations": [
+                {
+                  "offset": 1133,
+                  "length": 7
+                }
+              ]
+            },
+            {
+              "id": "32",
+              "infons": {
+                "identifier": "MESH:D008175",
+                "type": "Disease",
+                "valid": true,
+                "normalized": [
+                  "D008175"
+                ],
+                "database": "ncbi_mesh",
+                "normalized_id": "D008175",
+                "biotype": "disease",
+                "name": "Lung Neoplasms",
+                "accession": "@DISEASE_Lung_Neoplasms"
+              },
+              "text": "bladder, skin, lung cancer",
+              "locations": [
+                {
+                  "offset": 1262,
+                  "length": 26
+                }
+              ]
+            },
+            {
+              "id": "33",
+              "infons": {
+                "identifier": "4097",
+                "type": "Species",
+                "valid": true,
+                "normalized": [
+                  4097
+                ],
+                "database": "ncbi_taxonomy",
+                "normalized_id": 4097,
+                "biotype": "species",
+                "name": "4097",
+                "accession": null
+              },
+              "text": "tobacco",
+              "locations": [
+                {
+                  "offset": 1400,
+                  "length": 7
+                }
+              ]
+            },
+            {
+              "id": "34",
+              "infons": {
+                "identifier": "4097",
+                "type": "Species",
+                "valid": true,
+                "normalized": [
+                  4097
+                ],
+                "database": "ncbi_taxonomy",
+                "normalized_id": 4097,
+                "biotype": "species",
+                "name": "4097",
+                "accession": null
+              },
+              "text": "tobacco",
+              "locations": [
+                {
+                  "offset": 1488,
+                  "length": 7
+                }
+              ]
+            },
+            {
+              "id": "35",
+              "infons": {
+                "identifier": "MESH:D008171",
+                "type": "Disease",
+                "valid": true,
+                "normalized": [
+                  "D008171"
+                ],
+                "database": "ncbi_mesh",
+                "normalized_id": "D008171",
+                "biotype": "disease",
+                "name": "Lung Diseases",
+                "accession": "@DISEASE_Lung_Diseases"
+              },
+              "text": "lung",
+              "locations": [
+                {
+                  "offset": 1524,
+                  "length": 4
+                }
+              ]
+            },
+            {
+              "id": "36",
+              "infons": {
+                "identifier": "MESH:D012509",
+                "type": "Disease",
+                "valid": true,
+                "normalized": [
+                  "D012509"
+                ],
+                "database": "ncbi_mesh",
+                "normalized_id": "D012509",
+                "biotype": "disease",
+                "name": "Sarcoma",
+                "accession": "@DISEASE_Sarcoma"
+              },
+              "text": "sarcoma",
+              "locations": [
+                {
+                  "offset": 1530,
+                  "length": 7
+                }
+              ]
+            },
+            {
+              "id": "37",
+              "infons": {
+                "identifier": "MESH:D006258",
+                "type": "Disease",
+                "valid": true,
+                "normalized": [
+                  "D006258"
+                ],
+                "database": "ncbi_mesh",
+                "normalized_id": "D006258",
+                "biotype": "disease",
+                "name": "Head and Neck Neoplasms",
+                "accession": "@DISEASE_Head_and_Neck_Neoplasms"
+              },
+              "text": "esophageal, and head and neck cancer",
+              "locations": [
+                {
+                  "offset": 1539,
+                  "length": 36
+                }
+              ]
+            },
+            {
+              "id": "38",
+              "infons": {
+                "identifier": "MESH:D009369",
+                "type": "Disease",
+                "valid": true,
+                "normalized": [
+                  "D009369"
+                ],
+                "database": "ncbi_mesh",
+                "normalized_id": "D009369",
+                "biotype": "disease",
+                "name": "Neoplasms",
+                "accession": "@DISEASE_Neoplasms"
+              },
+              "text": "digestive cancers",
+              "locations": [
+                {
+                  "offset": 1638,
+                  "length": 17
+                }
+              ]
+            },
+            {
+              "id": "39",
+              "infons": {
+                "identifier": "MESH:D015179",
+                "type": "Disease",
+                "valid": true,
+                "normalized": [
+                  "D015179"
+                ],
+                "database": "ncbi_mesh",
+                "normalized_id": "D015179",
+                "biotype": "disease",
+                "name": "Colorectal Neoplasms",
+                "accession": "@DISEASE_Colorectal_Neoplasms"
+              },
+              "text": "colorectal, stomach, pancreatic and esophageal cancers",
+              "locations": [
+                {
+                  "offset": 1667,
+                  "length": 54
+                }
+              ]
+            }
+          ],
+          "relations": []
+        }
+      ],
+      "relations": [
+        {
+          "id": "R1",
+          "infons": {
+            "score": "0.9501",
+            "role1": {
+              "identifier": "MESH:D013941",
+              "type": "Chemical",
+              "valid": true,
+              "normalized": [
+                "D013941"
+              ],
+              "database": "ncbi_mesh",
+              "normalized_id": "D013941",
+              "biotype": "chemical",
+              "name": "Thymine",
+              "accession": "@CHEMICAL_Thymine"
+            },
+            "role2": {
+              "identifier": "MESH:D009369",
+              "type": "Disease",
+              "valid": true,
+              "normalized": [
+                "D009369"
+              ],
+              "database": "ncbi_mesh",
+              "normalized_id": "D009369",
+              "biotype": "disease",
+              "name": "Neoplasms",
+              "accession": "@DISEASE_Neoplasms"
+            },
+            "type": "Association"
+          },
+          "nodes": [
+            {
+              "refid": "0",
+              "role": "11,8"
+            }
+          ]
+        },
+        {
+          "id": "R2",
+          "infons": {
+            "score": "0.5671",
+            "role1": {
+              "identifier": "MESH:D013941",
+              "type": "Chemical",
+              "valid": true,
+              "normalized": [
+                "D013941"
+              ],
+              "database": "ncbi_mesh",
+              "normalized_id": "D013941",
+              "biotype": "chemical",
+              "name": "Thymine",
+              "accession": "@CHEMICAL_Thymine"
+            },
+            "role2": {
+              "identifier": "MESH:D044503",
+              "type": "Chemical",
+              "valid": true,
+              "normalized": [
+                "D044503"
+              ],
+              "database": "ncbi_mesh",
+              "normalized_id": "D044503",
+              "biotype": "chemical",
+              "name": "5-Methylcytosine",
+              "accession": "@CHEMICAL_5_Methylcytosine"
+            },
+            "type": "Association"
+          },
+          "nodes": [
+            {
+              "refid": "1",
+              "role": "11,10"
+            }
+          ]
+        }
+      ],
+      "pmid": 34786492,
+      "pmcid": null,
+      "meta": {},
+      "date": "2021-11-03T00:00:00Z",
+      "journal": "Biochem Biophys Rep",
+      "authors": [
+        "Mei Y",
+        "Liang D",
+        "Wang T",
+        "Yu D"
+      ],
+      "relations_display": [
+        {
+          "name": "associate|@CHEMICAL_Thymine|@DISEASE_Neoplasms"
+        },
+        {
+          "name": "associate|@CHEMICAL_Thymine|@CHEMICAL_5_Methylcytosine"
+        }
+      ]
+    }
+  ]
+}

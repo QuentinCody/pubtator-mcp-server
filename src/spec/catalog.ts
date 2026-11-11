@@ -1,289 +1,129 @@
 import type { ApiCatalog } from "@bio-mcp/shared/codemode/catalog";
 
 export const pubtatorCatalog: ApiCatalog = {
-	name: "PubTator3",
-	baseUrl: "https://www.ncbi.nlm.nih.gov/research/pubtator3-api",
-	version: "3",
-	endpointCount: 4,
-	auth: "No auth required. Optional NCBI API key improves rate limits from 3 to 10 req/sec.",
-	notes: [
-		"PubTator3 provides automated biomedical entity annotations (Gene, Disease, Chemical, Species, Variant) for PubMed articles.",
-		"Entity IDs are normalized: Gene → NCBI Gene ID, Disease → MeSH, Chemical → MeSH, Species → NCBI Taxonomy, Variant → rsID + HGVS.",
-		"PubTator3 annotates 36M+ PubMed abstracts plus 6M+ PMC full-text articles.",
-		"RELATIONS: the /relations endpoint exposes ~33M pre-computed, typed, directional relationship triples across 12 relation types (treat, cause, inhibit, associate, negative_correlate, positive_correlate, drug_interact, interact, stimulate, prevent, compare, convert) — i.e. literature relation extraction, available pre-computed and free. Use it to build an entity's relationship neighborhood in one call.",
-		"BioC JSON format nests annotations inside passages with exact text spans (offsets).",
-		"The publications/export and relations endpoints are the most reliable; the free-text search endpoint can be intermittent.",
-		"For multiple PMIDs, comma-separate them (up to ~100 per request).",
-	].join(" "),
-	endpoints: [
-		{
-			method: "GET",
-			path: "/publications/export/biocjson",
-			summary: "Get entity-annotated articles in BioC JSON format",
-			description:
-				"Retrieve NLP-annotated articles with Gene, Disease, Chemical, Species, and Variant entities linked to normalized database IDs. " +
-				"Each article contains passages (title + abstract) with annotations that include entity type, text mention, normalized identifiers, and character offsets. " +
-				"This is the core value of PubTator3 — structured entity extraction from biomedical literature.",
-			category: "publications",
-			queryParams: [
-				{
-					name: "pmids",
-					type: "string",
-					required: true,
-					description: "Comma-separated PubMed IDs (e.g. '33205991,33306226'). Up to ~100 per request.",
-				},
-				{
-					name: "full",
-					type: "boolean",
-					required: false,
-					description: "Include full text annotations (not just title/abstract). Default: false.",
-					default: false,
-				},
-			],
-			responseShape: `Array<{
-  _id: string;        // PMID
-  pmid: number;
-  passages: Array<{
-    infons: { type: "title" | "abstract"; section_type: string };
-    offset: number;
-    text: string;
-    annotations: Array<{
-      id: string;
-      infons: {
-        identifier: string;  // Normalized ID (e.g. "7157" for TP53, "MESH:D009369" for Neoplasms)
-        type: "Gene" | "Disease" | "Chemical" | "Species" | "Variant";
-        database?: string;
-      };
-      text: string;          // Mention text in the article
-      locations: Array<{ offset: number; length: number }>;
-    }>;
-  }>;
-}>`,
-			example: `// Get annotations for a single article
-const result = await api.get("/publications/export/biocjson", { pmids: "33205991" });
-const articles = result;
-for (const article of articles) {
-  for (const passage of article.passages) {
-    for (const ann of passage.annotations) {
-      console.log(ann.infons.type, ann.text, ann.infons.identifier);
-    }
-  }
-}`,
-			usageHint:
-				"Use this to extract structured entities from known PMIDs. Combine with Entrez/PubMed search to first find relevant PMIDs, then annotate them here.",
-		},
-		{
-			method: "GET",
-			path: "/search/",
-			summary: "Search PubTator-indexed articles by text query",
-			description:
-				"Search across PubTator3's indexed articles by free text. Returns matching articles with PMIDs, titles, journals, dates, and relevance scores. " +
-				"NOTE: This endpoint can be intermittent and may return errors. For reliable article search, prefer using Entrez/PubMed search tools and then fetch annotations via the publications endpoint.",
-			category: "search",
-			queryParams: [
-				{
-					name: "text",
-					type: "string",
-					required: true,
-					description: "Search query text (e.g. 'BRCA1 breast cancer').",
-				},
-				{
-					name: "page",
-					type: "number",
-					required: false,
-					description: "Page number starting from 1.",
-					default: 1,
-				},
-				{
-					name: "size",
-					type: "number",
-					required: false,
-					description: "Results per page, 1-100.",
-					default: 10,
-				},
-				{
-					name: "sort",
-					type: "string",
-					required: false,
-					description: "Sort order for results.",
-				},
-			],
-			responseShape: `{
-  results: Array<{
-    pmid: string;
-    title: string;
-    journal: string;
-    date: string;
-    score: number;
-    authors?: string[];
-  }>;
-  total: number;
-  page: number;
-}`,
-			example: `// Search for articles about TP53 and cancer
-const result = await api.get("/search/", { text: "TP53 cancer", size: 20 });
-console.log("Total hits:", result.total);
-for (const article of result.results) {
-  console.log(article.pmid, article.title, article.score);
-}`,
-			usageHint:
-				"This endpoint can be unreliable. For robust article search, prefer Entrez PubMed search and then use the /publications/export/biocjson endpoint to get annotations.",
-		},
-		{
-			method: "GET",
-			path: "/entity/autocomplete/",
-			summary: "Resolve entity names to normalized biomedical IDs",
-			description:
-				"Maps text queries to normalized biomedical entity identifiers. Returns entity type (Gene, Disease, Chemical, Species, Variant), " +
-				"database ID, and canonical name. Useful for entity name resolution before querying other databases.",
-			category: "entity",
-			queryParams: [
-				{
-					name: "query",
-					type: "string",
-					required: true,
-					description: "Entity name to resolve (e.g. 'BRCA1', 'aspirin', 'breast cancer').",
-				},
-				{
-					name: "type",
-					type: "string",
-					required: false,
-					description: "Filter by entity type: Gene, Disease, Chemical, Species, Variant.",
-					enum: ["Gene", "Disease", "Chemical", "Species", "Variant"],
-				},
-			],
-			responseShape: `Array<{
-  biotype: "Gene" | "Disease" | "Chemical" | "Species" | "Variant";
-  db_id: string;     // Normalized ID (e.g. "672" for BRCA1, "MESH:D001943" for Breast Neoplasms)
-  name: string;       // Canonical entity name
-  count?: number;     // Number of PubTator articles mentioning this entity
-}>`,
-			example: `// Resolve an entity name
-const results = await api.get("/entity/autocomplete/", { query: "BRCA1", type: "Gene" });
-for (const entity of results) {
-  console.log(entity.biotype, entity.name, entity.db_id);
-}`,
-			usageHint:
-				"Use this for entity name normalization — map free text to standard IDs before querying Gene, MeSH, or Taxonomy databases.",
-		},
-		{
-			method: "GET",
-			path: "/relations",
-			summary: "Find pre-computed, typed relationships between biomedical entities (literature relation extraction)",
-			description:
-				"Returns typed, directional relationships PubTator3 has automatically extracted across its entire corpus (36M+ abstracts + 6M+ full-text articles, ~33M relations total). " +
-				"Each relation links two entities (gene, disease, chemical, variant) with a relation type and the number of supporting publications. " +
-				"This is the relationship layer behind PubTator3 — the same biomedical relation-extraction capability commercial knowledge-graph products build by fine-tuning LLMs, here available pre-computed and free. " +
-				"Pass e1 alone to retrieve an entity's full relationship neighborhood, or e1 + e2 (+ optional type) to test a specific pairwise hypothesis.",
-			category: "relations",
-			queryParams: [
-				{
-					name: "e1",
-					type: "string",
-					required: true,
-					description:
-						"First entity, in PubTator id format @<TYPE>_<name>. Resolve it from /entity/autocomplete (use the returned `_id`). Examples: '@GENE_EGFR', '@CHEMICAL_Gefitinib', '@DISEASE_Lung_Neoplasms', '@VARIANT_p.T790M_EGFR_human'.",
-				},
-				{
-					name: "e2",
-					type: "string",
-					required: false,
-					description: "Optional second entity (same @<TYPE>_<name> format). When provided, only relations between e1 and e2 are returned.",
-				},
-				{
-					name: "type",
-					type: "string",
-					required: false,
-					description: "Optional relation-type filter.",
-					enum: [
-						"treat",
-						"cause",
-						"interact",
-						"associate",
-						"compare",
-						"drug_interact",
-						"stimulate",
-						"inhibit",
-						"negative_correlate",
-						"positive_correlate",
-						"prevent",
-						"convert",
-					],
-				},
-			],
-			responseShape: `Array<{
-  type: "treat" | "cause" | "interact" | "associate" | "compare" | "drug_interact" | "stimulate" | "inhibit" | "negative_correlate" | "positive_correlate" | "prevent" | "convert";
-  source: string;        // entity id, e.g. "@CHEMICAL_Gefitinib"
-  target: string;        // entity id, e.g. "@GENE_EGFR"
-  publications: number;  // count of supporting articles (evidence strength)
-}>`,
-			example: `// Build EGFR's literature-mined relationship neighborhood, ranked by evidence
-const rels = await api.get("/relations", { e1: "@GENE_EGFR" });
-// Hub entities can return hundreds of relations and may auto-stage (>30KB):
-if (rels.__staged) return rels; // then explore with pubtator_query_data
-const top = rels.sort((a, b) => b.publications - a.publications).slice(0, 20);
-for (const r of top) console.log(r.source, "--" + r.type + "->", r.target, "(" + r.publications + ")");`,
-			usageHint:
-				"Resolve entity names to ids first via /entity/autocomplete (the `_id` field). Hub entities (well-studied genes/diseases) return many relations and may auto-stage — filter with e2/type or query the staged table with SQL. To pull the supporting articles for a relation, feed the entity ids into /search/ relations syntax, then annotate PMIDs via /publications/export/biocjson.",
-		},
-	],
-	workflows: [
-		{
-			title: "Build an entity's literature relationship graph",
-			description:
-				"Resolve an entity name to its PubTator id, then pull its pre-computed, typed relationship neighborhood (the literature relation-extraction layer) ranked by supporting-publication count.",
-			keywords: ["relationship", "relation extraction", "knowledge graph", "neighborhood", "triples", "associate", "treat", "inhibit"],
-			code: `// 1) Resolve the entity name to its PubTator id (the _id field, e.g. "@GENE_EGFR")
-const hits = await api.get("/entity/autocomplete/", { query: "EGFR", type: "Gene" });
-const e1 = hits[0]._id;
-
-// 2) Pull every typed relation for that entity
-const rels = await api.get("/relations", { e1 });
-if (rels.__staged) return rels; // large neighborhood → query with pubtator_query_data
-
-// 3) Rank by supporting evidence
-const top = rels.sort((a, b) => b.publications - a.publications).slice(0, 25);
-return { entity: e1, relation_count: rels.length, top_relations: top };`,
-		},
-		{
-			title: "Extract all entities from a set of PMIDs",
-			description:
-				"Given a list of PMIDs, fetch BioC JSON annotations and aggregate all unique entities by type with their frequencies.",
-			keywords: ["entity extraction", "NER", "annotation", "aggregate", "frequency"],
-			code: `// Extract and aggregate entities from multiple articles
-const pmids = "33205991,35953817,36055877";
-const articles = await api.get("/publications/export/biocjson", { pmids });
-
-const entityMap = new Map();
-for (const article of articles) {
-  for (const passage of article.passages) {
-    for (const ann of passage.annotations) {
-      const key = ann.infons.type + ":" + ann.infons.identifier;
-      if (!entityMap.has(key)) {
-        entityMap.set(key, { type: ann.infons.type, id: ann.infons.identifier, text: ann.text, count: 0 });
-      }
-      entityMap.get(key).count++;
-    }
-  }
-}
-
-// Sort by frequency
-const entities = [...entityMap.values()].sort((a, b) => b.count - a.count);
-return { total_entities: entities.length, top_entities: entities.slice(0, 50) };`,
-		},
-		{
-			title: "Resolve entity and find annotated articles",
-			description:
-				"First resolve an entity name to its normalized ID via autocomplete, then search for articles mentioning it.",
-			keywords: ["entity resolution", "name normalization", "search", "lookup"],
-			code: `// Resolve "aspirin" to its MeSH ID, then search for annotated articles
-const entities = await api.get("/entity/autocomplete/", { query: "aspirin", type: "Chemical" });
-const topEntity = entities[0];
-console.log("Resolved:", topEntity.name, topEntity.db_id);
-
-// Search for articles about this entity
-const results = await api.get("/search/", { text: topEntity.name, size: 10 });
-return { entity: topEntity, articles: results };`,
-		},
-	],
+  name: "PubTator3",
+  baseUrl: "https://www.ncbi.nlm.nih.gov/research/pubtator3-api",
+  version: "3",
+  endpointCount: 5,
+  auth: "Public API; no API key configured. E-utilities API-key rate limits are not a verified PubTator contract.",
+  notes: [
+    "PubTator annotations and relations are automated text mining, not curated assertions or clinical evidence grades.",
+    "Autocomplete search tokens beginning with @ differ from annotation database identifiers; retain both without inventing equivalence.",
+    "Relations are ranked related-entity results, not a complete neighborhood. Counts do not establish causal direction or evidence quality.",
+    "Use the local /publications/evidence view to retain the complete BioC envelope, document-scoped IDs and checked span candidates.",
+    "No new 2026 API release established. Corpus counts in the 2024 methods paper are historical observations.",
+    "Native reads verified 2026-10-04: full=true requests full text where available and may fall back to an abstract; the adapter omits full=false because upstream treats its presence as true. Preserve article-specific licenses.",
+    "Search page numbering starts at 1; the observed native page_size is 10. size/page_size are ignored upstream and rejected locally. Autocomplete uses concept; legacy type is mapped to lowercase concept.",
+  ].join(" "),
+  endpoints: [
+    {
+      method: "GET", path: "/publications/evidence", category: "publications",
+      summary: "Local lossless BioC evidence view with source-qualified IDs and span checks",
+      description: "Fetches existing BioC JSON with a native byte-hash receipt, document manifest and missing-PMID coverage. Compound IDs stay intact. Relation role1/role2 participants join all exact same-document identity matches; these are not verified relation evidence sentences. Nodes accompanying those native identities remain uninterpreted. Span interpretations test UTF-8 bytes, Unicode code points and UTF-16 units; matching text does not verify the convention. This is an adapter view, not a new NCBI endpoint.",
+      queryParams: [
+        { name: "pmids", type: "string", required: true, description: "Comma-separated numeric PMIDs, at most 100. Start with one for full text; reads are bounded at 4 MiB." },
+        { name: "full", type: "boolean", required: false, description: "true requests full text where available; false/omitted requests abstracts. Inspect native sections and licenses; full text may be unavailable." },
+      ],
+      responseShape: "{ source, retrieved_at, request, receipt:{source_url,response_sha256,byte_count,source_version:null}, documents, coverage, evidence_kind:'text_mined', curated_assertion:false, completeness:'returned_documents_only', native, mentions:[{document_index,document_id,record_id,annotation_id,path,text,identifier,entity_type,database,exact_source_key,native,spans}], relations:[{document_index,path,native,nodes,participants}], caveat }",
+      example: 'return await api.get("/publications/evidence", {pmids:"34786492"});',
+      usageHint: "Check __staged, __api_error and __stage_error before arrays. Staged tables: documents, passages, mentions, spans, relations, participants; native_json keeps original types/fields and payloads retains the full envelope. Join document_index plus exact_source_key; these are exact source/type/database/identifier matches, not universal IDs. Native document IDs can differ from PMIDs and request order.",
+    },
+    {
+      method: "GET", path: "/publications/export/biocjson", category: "publications",
+      summary: "Get entity-annotated articles in BioC JSON format",
+      description: "Existing BioC export. The legacy adapter unwraps PubTator3 arrays; use /publications/evidence when collection metadata must be retained. Native document IDs need not equal PMIDs. Locations are document-relative; do not slice JavaScript strings without checking offset units.",
+      queryParams: [
+        { name: "pmids", type: "string", required: true, description: "Comma-separated PubMed IDs; request small batches (up to 100)." },
+        { name: "full", type: "boolean", required: false, description: "true requests available full text; false/omitted requests abstracts. The adapter removes false upstream. Inspect returned sections, PMID/PMC fields and article license; full text can fall back to an abstract." },
+      ],
+      responseShape: "BioC documents (legacy PubTator3 wrapper unwrapped), or native collection object. Preserve infons, passages, sentences, annotations, locations and relations.",
+      example: 'return await api.get("/publications/export/biocjson", {pmids:"38572754"});',
+    },
+    {
+      method: "GET", path: "/search/", category: "search",
+      summary: "Search PubTator-indexed articles by text, entity or relation query",
+      description: "Returns native search results and paging metadata. Results establish retrieval matches, not curated assertions. Inspect the current response before assuming total counts or pagination completeness.",
+      queryParams: [
+        { name: "text", type: "string", required: true, description: "Free text or provider entity/relation search syntax." },
+        { name: "page", type: "number", required: false, description: "Positive page number starting at 1. Inspect native current, count, total_pages and page_size (observed 10); size/page_size requests are unsupported.", default: 1 },
+        { name: "sort", type: "string", required: false, description: "Provider sort selector." },
+      ],
+      responseShape: "Native search response with article hits and provider paging metadata.",
+      example: 'return await api.get("/search/", {text:"TP53 cancer", page:1});',
+    },
+    {
+      method: "GET", path: "/entity/autocomplete/", category: "entity",
+      summary: "Find candidate PubTator entity search tokens and database identifiers",
+      description: "Retain native ID fields (_id or id), biotype, db_id and name when supplied. Search suggestions may not denote the intended entity; inspect candidates before using an @ token.",
+      queryParams: [
+        { name: "query", type: "string", required: true, description: "Entity name such as BRCA1 or aspirin." },
+        { name: "limit", type: "number", required: false, description: "Requested number of suggestions.", default: 10 },
+        { name: "concept", type: "string", required: false, description: "Provider concept selector; gene verified natively. Legacy type:'Gene' maps to concept:'gene'. Inspect returned biotype; candidates can be ambiguous." },
+      ],
+      responseShape: "Native autocomplete suggestions; retain all ID/name/type fields.",
+      example: 'return await api.get("/entity/autocomplete/", {query:"EGFR", limit:10});',
+    },
+    {
+      method: "GET", path: "/relations", category: "relations",
+      summary: "Find ranked, text-mined related entities",
+      description: "NCBI's published integration documents a top-related-entity query. e1 is an @ token, e2 selects an entity type. Results are not exhaustive and do not provide curated evidence or verified sentence spans by themselves.",
+      queryParams: [
+        { name: "e1", type: "string", required: true, description: "Provider @ entity token, inspected from autocomplete; e.g. @GENE_JAK1." },
+        { name: "e2", type: "string", required: true, description: "Related entity type; the methods paper uses Chemical. Do not assume this is a second entity identifier." },
+        { name: "type", type: "string", required: true, description: "Provider relation filter.", enum: ["treat", "cause", "cotreat", "interact", "associate", "compare", "drug_interact", "stimulate", "inhibit", "negative_correlate", "positive_correlate", "prevent", "convert"] },
+        { name: "limit", type: "number", required: false, description: "Requested related-entity limit; completeness is not guaranteed." },
+      ],
+      responseShape: "Native ranked relation response. Preserve returned entity tokens, relation labels and publication counts without inferring directionality beyond the provider fields.",
+      example: 'return await api.get("/relations", {e1:"@GENE_JAK1", e2:"Chemical", type:"negative_correlate"});',
+      usageHint: "Provider methods example: https://pmc.ncbi.nlm.nih.gov/articles/PMC11223843/ . Integration schema: https://github.com/ncbi-nlp/pubtator-gpt . Fetch supporting publications separately; co-occurrence is not a relation assertion.",
+    },
+  ],
+  workflows: [
+    {
+      title: "Inspect source IDs and evidence spans for known publications",
+      description: "Retain the native BioC payload and examine derived mentions without assuming a universal identifier namespace or offset convention.",
+      keywords: ["entity", "identifier", "evidence", "span", "BioC", "provenance"],
+      code: 'return await api.get("/publications/evidence", {pmids:"34786492"});',
+    },
+    {
+      title: "Find candidate related chemicals for JAK1",
+      description: "Use the provider's documented relation query; keep the response ranked and bounded rather than claiming complete graph coverage.",
+      keywords: ["relation", "chemical", "JAK1", "negative_correlate"],
+      code: 'return await api.get("/relations", {e1:"@GENE_JAK1", e2:"Chemical", type:"negative_correlate"});',
+    },
+    {
+      title: "Inspect full-text entities and relation participants",
+      description: "Request available PMC text while retaining original sections, licenses, document identifiers and the retrieval receipt. Large results stage automatically; query mentions and participants by document_index and exact_source_key.",
+      keywords: ["full text", "PMC", "BioC", "relation", "evidence", "license"],
+      code: 'return await api.get("/publications/evidence", {pmids:"34786492", full:true});',
+    },
+    {
+      title: "Trace a ranked JAK1 relation to one supporting publication",
+      description: "Keep autocomplete candidates, the ranked native source/target tokens, one relation-search page and one publication's BioC evidence. This bounded text-mining example does not establish causality or exhaustive support.",
+      keywords: ["relation", "JAK1", "publication", "evidence", "join", "negative_correlate"],
+      code: `const stop = x => x.__staged || x.__api_error || x.__stage_error;
+const candidates = await api.get("/entity/autocomplete/", {query:"JAK1", concept:"gene", limit:5});
+if (stop(candidates)) return candidates;
+const selected = candidates.find(x => x._id === "@GENE_JAK1");
+if (!selected) return {candidates, note:"Expected native JAK1 candidate absent; inspect candidates before selecting."};
+const ranked = await api.get("/relations", {e1:selected._id,e2:"Chemical",type:"negative_correlate",limit:3});
+if (stop(ranked)) return ranked;
+const relation = ranked[0];
+if (!relation) return {candidates,selected,ranked};
+const text = "relations:" + relation.type + "|" + relation.source + "|" + relation.target;
+const search = await api.get("/search/", {text,page:1});
+if (stop(search)) return search;
+const pmid = search.results?.[0]?.pmid;
+if (!pmid) return {candidates,selected,ranked,text,search};
+const evidence = await api.get("/publications/evidence", {pmids:String(pmid)});
+if (evidence.__api_error || evidence.__stage_error) return evidence;
+return {candidates,selected,ranked,text,search,evidence};`,
+    },
+    {
+      title: "Inspect entity-resolution candidates",
+      description: "Inspect candidate native PubTator tokens and database identifiers before selecting an entity.",
+      keywords: ["autocomplete", "normalization", "identifier"],
+      code: 'return await api.get("/entity/autocomplete/", {query:"aspirin", limit:10});',
+    },
+  ],
 };
